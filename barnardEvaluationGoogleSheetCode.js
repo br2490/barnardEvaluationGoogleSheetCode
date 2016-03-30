@@ -6,6 +6,9 @@
  * p: x49005
  *
  * Version 1 - 2015/OCT/07
+ * Version 2 - 2015/OCT/12
+ *    - added error checking
+ *    - fixed various bugs.
  **/
 
 
@@ -35,30 +38,14 @@ function populateChildren() {
         variables = ss.getSheetByName("variables"),
         access = ss.getSheetByName("accessSheet"),
         fullImportSheet = ss.getSheetByName("ImportedSheet");
-
-
-    // This should be its own function, and run for all Sheets - less specific code - but w/e.
-    if (fullImportSheet) {
-        // Out with the old
-        ss.deleteSheet(fullImportSheet);
-        // In with the new
-        ss.insertSheet('ImportedSheet', 3);
-        // Get the Sheet again
-        fullImportSheet = ss.getSheetByName("ImportedSheet");
-        // Format the Sheet, assign the headings, etc.
-        fullImportSheet.setFrozenRows(1);
-        fullImportSheet.appendRow(['=TRANSPOSE(variables!C14:C26)']);
-    }
-  // Done messing with the Sheets :) //
+    // Done messing with the Sheets :) //
 
 
     // START VARIABLES //
-    // Set our ERROR CHECKING CONDITIONALS
-    var ecc = '=ARRAYFORMULA(if(AND(F2:F > 5,G2:G = "No"), 1000, 0) + if(NOT(ISBLANK(K2:K)), 100, 0) + if(NOT(I2:I="Instructors are correct"), 10, 0))',
-
-        // Grab CONSTANT variables set in the variables sheet.
-        importConst = variables.getRange("D11").getValue(),
+    // Grab CONSTANT variables set in the variables sheet.
+    var importConst = variables.getRange("D11").getValue(),
         numberOfDepts = variables.getRange("D2").getValue(),
+        ecc = variables.getRange("C30").getValue(),
 
         // Grab all of our URLs.
         urlRange = variables.getRange(2, 1, numberOfDepts).getValues(),
@@ -87,7 +74,26 @@ function populateChildren() {
     completedCommand = completedCommand + '}))';
     access.appendRow(['-----END-----']);
 
-    // Done with import Sheet.
-    fullImportSheet.appendRow(['', ecc, completedCommand]);
-    fullImportSheet.autoResizeColumn(3);
+    // This should be its own function, and run for all Sheets - less specific code - but w/e.
+    if (fullImportSheet) {
+        // Out with the old
+        ss.deleteSheet(fullImportSheet);
+        // In with the new
+        ss.insertSheet('ImportedSheet', 3);
+        // Get the Sheet again
+        fullImportSheet = ss.getSheetByName("ImportedSheet");
+        // Format the Sheet, assign the headings, etc.
+        fullImportSheet.setFrozenRows(1);
+        fullImportSheet.appendRow(['=TRANSPOSE(variables!C14:C26)']);
+    }
+
+    fullImportSheet.appendRow(['', 'ecc', completedCommand]);
+    resize(fullImportSheet, 16);
+}
+
+
+function resize(sheet, numberOfCols) {
+    for (i = 1; i <= numberOfCols; i++) {
+        sheet.autoResizeColumn(i);
+    }
 }
